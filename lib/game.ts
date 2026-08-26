@@ -44,7 +44,7 @@ const conversion:Record<string,Conversion[]> = {
 };
 const uid=()=>crypto.randomUUID();
 const shuffle=<T,>(a:T[])=>a.map(v=>({v,r:Math.random()})).sort((x,y)=>x.r-y.r).map(x=>x.v);
-export function newSession():Session { const code=String(Math.floor(1000+Math.random()*9000)); return {code,teacherToken:uid(),createdAt:Date.now(),rooms:['A','B','C','D','A'].map((set,i)=>({code:`${code}-${i+1}`,group:i+1,set,phase:'lobby',round:0,deadline:null,players:[],paths:[],log:[]}))}; }
+export function newSession():Session { const code=String(Math.floor(1000+Math.random()*9000)); const base=['A','B','C','D'];const sets=shuffle([...base,base[Math.floor(Math.random()*base.length)]]);return {code,teacherToken:uid(),createdAt:Date.now(),rooms:sets.map((set,i)=>({code:`${code}-${i+1}`,group:i+1,set,phase:'lobby',round:0,deadline:null,players:[],paths:[],log:[]}))}; }
 export function join(room:Room,name:string){ if(room.phase!=='lobby')throw Error('이미 시작된 조입니다.'); if(room.players.length>=6)throw Error('이 조는 6명이 모두 참여했습니다.'); if(room.players.some(p=>p.name===name))throw Error('같은 이름이 이미 있습니다.'); const p:Player={id:uid(),token:uid(),name,role:'',inventory:[],converted:false,transferred:false,inbox:[],stats:{made:0,converted:0,sent:0,received:0,car:0,paths:[]}}; room.players.push(p); return p; }
 export function start(room:Room){ if(room.players.length<5)throw Error('경로를 유지하려면 최소 5명이 참여해야 합니다.'); const roles=shuffle(room.players.length===5?FIVE_PLAYER_ROLE_SETS[room.set]:ROLE_SETS[room.set]); room.players.forEach((p,i)=>p.role=roles[i]); room.round=1; room.phase='negotiation'; room.deadline=Date.now()+120000; room.log.unshift(`${room.players.length}명으로 게임 시작 · 1라운드 협상`); }
 export function advance(room:Room){
